@@ -9,6 +9,7 @@ import { useAuth } from "../context/AuthContext";
 import { createBlock, getLastBlock } from "../utils/ledger.js";
 import { narrateRoute } from "../utils/geminiNarrator.js";
 import { createBooking, getBookingsByUser } from "../utils/api";
+import Toast, { useToast } from "../components/Toast";
 
 const defaultMarkerIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -51,16 +52,9 @@ export default function MapPage() {
   const [narrateError, setNarrateError] = useState("");
   const [narrateSpots, setNarrateSpots] = useState([]);
 
-  const [toast, setToast] = useState({ message: "", type: "success", visible: false });
+  const { toast, showToast } = useToast();
 
   // -------- Helpers --------
-
-  function showToast(message, type = "success") {
-    setToast({ message, type, visible: true });
-    setTimeout(() => {
-      setToast((t) => ({ ...t, visible: false }));
-    }, 2500);
-  }
 
   async function getCoordinates(query) {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
@@ -659,18 +653,7 @@ export default function MapPage() {
         <div ref={mapRef} id="map" />
       </div>
 
-      {/* TOAST */}
-      {toast.visible && (
-        <div
-          className="toast"
-          style={{
-            backgroundColor:
-              toast.type === "success" ? "#16a34a" : "#dc2626",
-          }}
-        >
-          {toast.message}
-        </div>
-      )}
+      <Toast toast={toast} />
     </div>
   );
 }

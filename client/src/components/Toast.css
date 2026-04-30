@@ -1,0 +1,72 @@
+/* src/components/Toast.css */
+
+.zapgo-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  min-width: 220px;
+  max-width: 380px;
+  padding: 0.85rem 1.2rem;
+  border-radius: 0.75rem;
+
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ffffff;
+
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.12);
+
+  /* slide-up + fade-in */
+  animation: zapgo-toast-in 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes zapgo-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(1rem) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Variants ─────────────────────────────────── */
+
+.zapgo-toast--success {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+}
+
+.zapgo-toast--error {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+.zapgo-toast--info {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+/* ── Icon circle ──────────────────────────────── */
+
+.zapgo-toast__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.zapgo-toast__message {
+  flex: 1;
+  line-height: 1.4;
+}

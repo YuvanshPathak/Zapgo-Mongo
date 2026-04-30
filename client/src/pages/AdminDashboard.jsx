@@ -24,6 +24,7 @@ import {
   updateStation,
   deleteStation,
 } from "../utils/api";
+import Toast, { useToast } from "../components/Toast";
 import "../admin.css";
 import { Bar } from "react-chartjs-2";
 import {
@@ -149,6 +150,8 @@ export default function AdminDashboard() {
   const { stations, loadingStations, setStations } = useStations();
   const { bookings, loadingBookings } = useBookings();
 
+  const { toast, showToast } = useToast();
+
   const [stationName, setStationName] = useState("");
   const [stationLocation, setStationLocation] = useState("");
   const [notificationStationId, setNotificationStationId] = useState("");
@@ -175,7 +178,7 @@ const handleVerifyBooking = async (booking) => {
     const chain = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
     if (chain.length === 0) {
-      alert("No ledger blocks found.");
+      showToast("No ledger blocks found.", "error");
       return;
     }
 
@@ -184,32 +187,32 @@ const handleVerifyBooking = async (booking) => {
 
     // 3) verify entire chain
     if (!verifyChain(chain)) {
-      alert("Chain ❌: invalid block found (ledger integrity failed).");
+      showToast("Chain invalid — ledger integrity failed.", "error");
       return;
     }
 
-    // 4) find matching block for this booking (tweak predicate if your field names differ)
+    // 4) find matching block for this booking
     const match = chain.find(b => {
       const sameUid = String(b.uid || "") === String(booking.uid || booking.userUid || "");
       const sameFrom = String((b.from || b.start || "")).trim() === String((booking.from || booking.start || "")).trim();
       const sameTo = String((b.to || b.destination || "")).trim() === String((booking.to || booking.destination || "")).trim();
-      const sameDist = (b.distance || b.dist || "") == (booking.distance || booking.dist || booking.dist || "");
+      const sameDist = (b.distance || b.dist || "") == (booking.distance || booking.dist || "");
       const sameTime = (b.duration || b.durationHours || b.time || "") == (booking.durationHours || booking.time || "");
       const sameCreated = String(b.createdAt || "") === String(booking.createdAt || "");
       return sameUid && sameFrom && sameTo && (sameDist || sameTime || sameCreated);
     });
 
     if (!match) {
-      alert("No matching block found for this booking in ledger.");
+      showToast("No matching block found for this booking.", "error");
       return;
     }
 
     // 5) recompute hash and compare
     const computed = computeHashForBlock(match);
     if (computed === (match.hash || match._hash || "")) {
-      alert("Booking verified: hash matches and chain valid.");
+      showToast("✓ Booking verified — chain valid.", "success");
     } else {
-      alert("Booking verification failed: hash mismatch for matched block.");
+      showToast("Verification failed: hash mismatch.", "error");
       console.error("Stored block:", match);
       console.error("Computed hash:", computed);
     }
@@ -231,10 +234,10 @@ const handleVerifyBooking = async (booking) => {
     try {
       await deleteUser(uid);
       setUsers((prev) => prev.filter((u) => u.uid !== uid));
-      alert("User deleted successfully!");
+      showToast("User deleted successfully!", "success");
     } catch (err) {
       console.error("Error deleting user:", err);
-      alert("Failed to delete user: " + err.message);
+      showToast("Failed to delete user: " + err.message, "error");
     }
   };
 
@@ -252,10 +255,10 @@ const handleVerifyBooking = async (booking) => {
       setStations((prev) => [...prev, res.data]);
       setStationName("");
       setStationLocation("");
-      alert("Station added successfully!");
+      showToast("Station added successfully!", "success");
     } catch (err) {
       console.error("Error adding station:", err);
-      alert("Failed to add station: " + err.message);
+      showToast("Failed to add station: " + err.message, "error");
     }
   };
 
@@ -264,15 +267,15 @@ const handleVerifyBooking = async (booking) => {
     try {
       await deleteStation(id);
       setStations((prev) => prev.filter((s) => s._id !== id && s.id !== id));
-      alert("Station deleted successfully!");
+      showToast("Station deleted!", "success");
     } catch (err) {
       console.error("Error deleting station:", err);
-      alert("Failed to delete station: " + err.message);
+      showToast("Failed to delete station: " + err.message, "error");
     }
   };
 
   const handleStartEditStation = (station) => {
-    setEditingStationId(station.id);
+    setEditingStationId(station._id || station.id);
     setEditName(station.name || "");
     setEditLocation(station.location || "");
   };
@@ -306,25 +309,26 @@ const handleVerifyBooking = async (booking) => {
       setEditingStationId(null);
       setEditName("");
       setEditLocation("");
-      alert("Station updated successfully!");
+      showToast("Station updated!", "success");
     } catch (err) {
       console.error("Error updating station:", err);
-      alert("Failed to update station: " + err.message);
+      showToast("Failed to update station: " + err.message, "error");
     }
   };
 
   const handleSendNotification = (e) => {
     e.preventDefault();
     if (!notificationStationId) {
-      alert("Please select a charging station first.");
+      showToast("Please select a charging station first.", "error");
       return;
     }
     if (!notificationMessage.trim()) {
-      alert("Enter a notification message.");
+      showToast("Enter a notification message.", "error");
       return;
     }
-    alert(
-      `Notification sent to station ${notificationStationId} (simulated).\nMessage: ${notificationMessage}`
+    showToast(
+      `Notification sent to station ${notificationStationId} (simulated).`,
+      "info"
     );
     setNotificationStationId("");
     setNotificationMessage("");
@@ -697,6 +701,7 @@ const handleVerifyBooking = async (booking) => {
           )}
         </main>
       </div>
+      <Toast toast={toast} />
     </div>
   );
 }
