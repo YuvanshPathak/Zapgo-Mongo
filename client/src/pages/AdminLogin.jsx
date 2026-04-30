@@ -24,6 +24,7 @@ export default function AdminLogin() {
 
     if (match) {
       sessionStorage.setItem("isAdminLoggedIn", "true");
+      sessionStorage.setItem("adminSecret", "zapgo-admin-secret-2026");
       alert("Login successful!");
       navigate("/admin/dashboard", { replace: true });
     } else {

@@ -4,11 +4,11 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
-import { collection, addDoc } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 import { useAuth } from "../context/AuthContext";
 import { createBlock, getLastBlock } from "../utils/ledger.js";
 import { narrateRoute } from "../utils/geminiNarrator.js";
+import { createBooking, getBookingsByUser } from "../utils/api";
 
 const defaultMarkerIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -108,11 +108,13 @@ export default function MapPage() {
     setTimeout(() => map.invalidateSize(), 200);
   }, []);
 
-  // Load bookings from localStorage once
+  // Load bookings from API for sidebar mini-list
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("zapgoBookings") || "[]");
-    setBookings(saved);
-  }, []);
+    if (!user) return;
+    getBookingsByUser(user.uid)
+      .then((res) => setBookings(res.data || []))
+      .catch(() => setBookings([]));
+  }, [user]);
 
   // -------- Route planning --------
 
@@ -310,7 +312,6 @@ export default function MapPage() {
       return;
     }
 
-    // Ensure initial/final charge numeric & valid before booking as well
     const initChargeNum = Number.parseInt(initialCharge, 10);
     const finalChargeNum = Number.parseInt(finalCharge, 10);
 
@@ -326,68 +327,52 @@ export default function MapPage() {
       return;
     }
 
-    // Range must still be valid at booking time
     const rangeNum = Number(rangeKm);
     if (rangeKm === "" || Number.isNaN(rangeNum) || rangeNum < 1 || rangeNum > 2000) {
       showToast("Range must be a number between 1 and 2000 km.", "error");
       return;
     }
 
-    const booking = {
-      from: start.trim(),
-      to: end.trim(),
-      dist: totalDist.toFixed(1),
-      time: Number(totalTimeHrs).toFixed(1),
-      createdAt: new Date().toLocaleString(),
-      // include numeric charge data for consistency
-      initialCharge: initChargeNum,
-      finalCharge: finalChargeNum,
-      rangeKm: rangeNum,
-    };
-
-    // Save locally
-    const merged = [...bookings, booking];
-    setBookings(merged);
-    localStorage.setItem("zapgoBookings", JSON.stringify(merged));
-
     // ---- BLOCKCHAIN ----
     const prevBlock = await getLastBlock(db);
 
     const block = createBlock(prevBlock, {
       uid: user?.uid || "",
-      from: booking.from,
-      to: booking.to,
-      distance: booking.dist,
-      durationHours: booking.time,
-      initialCharge: booking.initialCharge,
-      finalCharge: booking.finalCharge,
-      rangeKm: booking.rangeKm,
+      from: start.trim(),
+      to: end.trim(),
+      distance: String(totalDist.toFixed(1)),
+      durationHours: String(Number(totalTimeHrs).toFixed(1)),
+      initialCharge: initChargeNum,
+      finalCharge: finalChargeNum,
+      rangeKm: rangeNum,
     });
 
-    // Clean undefined (paranoid safety)
     Object.keys(block).forEach((k) => {
       if (block[k] === undefined) block[k] = "";
     });
 
+    const { addDoc, collection } = await import("firebase/firestore");
     await addDoc(collection(db, "ledger"), block);
     // ---- END BLOCKCHAIN ----
 
-    // Firestore booking
+    // Save booking to MongoDB
     try {
-      await addDoc(collection(db, "bookings"), {
+      const res = await createBooking({
         uid: user?.uid || null,
         email: user?.email || null,
-        start: booking.from,
-        destination: booking.to,
-        distance: booking.dist,
-        durationHours: booking.time,
-        initialCharge: booking.initialCharge,
-        finalCharge: booking.finalCharge,
-        rangeKm: booking.rangeKm,
-        createdAt: new Date().toISOString(),
+        start: start.trim(),
+        destination: end.trim(),
+        distance: String(totalDist.toFixed(1)),
+        durationHours: String(Number(totalTimeHrs).toFixed(1)),
+        initialCharge: initChargeNum,
+        finalCharge: finalChargeNum,
+        rangeKm: rangeNum,
+        stops,
       });
+      // Refresh sidebar list
+      if (res.data) setBookings((prev) => [res.data, ...prev]);
     } catch (err) {
-      console.error("Firestore booking save failed:", err);
+      console.error("MongoDB booking save failed:", err);
     }
 
     showToast("Booking confirmed!", "success");
@@ -654,14 +639,14 @@ export default function MapPage() {
               <p className="bookings-empty">No bookings yet.</p>
             )}
             {bookings.map((b, idx) => (
-              <div key={idx} className="booking-item">
+              <div key={b._id || idx} className="booking-item">
                 <div className="booking-main">
-                  {b.from} → {b.to}
+                  {b.start || b.from} → {b.destination || b.to}
                 </div>
                 <div className="booking-meta">
-                  Distance: {b.dist} km • Time: {b.time} hrs
+                  Distance: {b.distance || b.dist} km • Time: {b.durationHours || b.time} hrs
                   <br />
-                  Booked at: {b.createdAt}
+                  Booked at: {b.createdAt ? new Date(b.createdAt).toLocaleString() : "-"}
                 </div>
               </div>
             ))}

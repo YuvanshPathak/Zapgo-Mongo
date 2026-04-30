@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { auth, db } from "../firebase/firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { auth } from "../firebase/firebase";
+import { upsertUser } from "../utils/api";
 import useParticles from "../hooks/useParticles";
 
 export default function Register() {
@@ -64,12 +64,12 @@ export default function Register() {
                 displayName: formData.name,
             });
 
-            // Create user document in Firestore
-            await setDoc(doc(db, "users", user.uid), {
+            // Upsert user in MongoDB
+            await upsertUser({
+                uid: user.uid,
                 email: user.email,
                 displayName: formData.name,
-                photoURL: user.photoURL || "", // Default empty or placeholder if needed
-                createdAt: new Date().toISOString(),
+                photoURL: user.photoURL || "",
             });
 
             navigate("/app");

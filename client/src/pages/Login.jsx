@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
-import { auth, googleProvider, db } from "../firebase/firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { auth, googleProvider } from "../firebase/firebase";
+import { upsertUser } from "../utils/api";
 import useParticles from "../hooks/useParticles";
 
 export default function Login() {
@@ -23,18 +23,12 @@ export default function Login() {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
-      const userRef = doc(db, "users", user.uid);
-
-      await setDoc(
-        userRef,
-        {
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          createdAt: new Date().toISOString(),
-        },
-        { merge: true }
-      );
+      await upsertUser({
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+      });
 
       navigate("/app");
     } catch (err) {
@@ -51,7 +45,16 @@ export default function Login() {
     setError("");
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      const user = result.user;
+
+      await upsertUser({
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+      });
+
       // Valid login, AuthContext will catch user change
       navigate("/app");
     } catch (err) {

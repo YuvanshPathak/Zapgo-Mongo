@@ -13,13 +13,17 @@ import { useNavigate } from "react-router-dom";
 import {
   collection,
   getDocs,
-  addDoc,
-  deleteDoc,
-  doc,
-  updateDoc,
-  onSnapshot,
 } from "firebase/firestore";
 import { db } from "../firebase/firebase";
+import {
+  getAllUsers,
+  deleteUser,
+  getAllBookings,
+  getAllStations,
+  createStation,
+  updateStation,
+  deleteStation,
+} from "../utils/api";
 import "../admin.css";
 import { Bar } from "react-chartjs-2";
 import {
@@ -77,9 +81,8 @@ function useUsers() {
     async function loadUsers() {
       setLoadingUsers(true);
       try {
-        const snap = await getDocs(collection(db, "users"));
-        const arr = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setUsers(arr);
+        const res = await getAllUsers();
+        setUsers(res.data || []);
       } catch (err) {
         console.error("Error loading users:", err);
       } finally {
@@ -100,9 +103,8 @@ function useStations() {
     async function loadStations() {
       setLoadingStations(true);
       try {
-        const snap = await getDocs(collection(db, "stations"));
-        const arr = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setStations(arr);
+        const res = await getAllStations();
+        setStations(res.data || []);
       } catch (err) {
         console.error("Error loading stations:", err);
       } finally {
@@ -120,33 +122,17 @@ function useBookings() {
   const [loadingBookings, setLoadingBookings] = useState(true);
 
   useEffect(() => {
-    const bookingsRef = collection(db, "bookings");
-
-    const unsub = onSnapshot(
-      bookingsRef,
-      (snapshot) => {
-        const arr = [];
-        snapshot.forEach((docSnap) => {
-          arr.push({ id: docSnap.id, ...docSnap.data() });
-        });
-
-        // sort by createdAt desc
-        arr.sort((a, b) => {
-          const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const dbb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return dbb - da;
-        });
-
-        setBookings(arr);
-        setLoadingBookings(false);
-      },
-      (err) => {
+    async function loadBookings() {
+      try {
+        const res = await getAllBookings();
+        setBookings(res.data || []);
+      } catch (err) {
         console.error("Error loading bookings:", err);
+      } finally {
         setLoadingBookings(false);
       }
-    );
-
-    return () => unsub();
+    }
+    loadBookings();
   }, []);
 
   return { bookings, loadingBookings };
@@ -240,11 +226,11 @@ const handleVerifyBooking = async (booking) => {
     navigate("/admin", { replace: true });
   };
 
-  const handleDeleteUser = async (id) => {
+  const handleDeleteUser = async (uid) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
     try {
-      await deleteDoc(doc(db, "users", id));
-      setUsers((prev) => prev.filter((u) => u.id !== id));
+      await deleteUser(uid);
+      setUsers((prev) => prev.filter((u) => u.uid !== uid));
       alert("User deleted successfully!");
     } catch (err) {
       console.error("Error deleting user:", err);
@@ -259,14 +245,11 @@ const handleVerifyBooking = async (booking) => {
       return;
     }
     try {
-      const ref = await addDoc(collection(db, "stations"), {
+      const res = await createStation({
         name: stationName.trim(),
         location: stationLocation.trim(),
       });
-      setStations((prev) => [
-        ...prev,
-        { id: ref.id, name: stationName.trim(), location: stationLocation.trim() },
-      ]);
+      setStations((prev) => [...prev, res.data]);
       setStationName("");
       setStationLocation("");
       alert("Station added successfully!");
@@ -279,8 +262,8 @@ const handleVerifyBooking = async (booking) => {
   const handleDeleteStation = async (id) => {
     if (!window.confirm("Are you sure you want to delete this station?")) return;
     try {
-      await deleteDoc(doc(db, "stations", id));
-      setStations((prev) => prev.filter((s) => s.id !== id));
+      await deleteStation(id);
+      setStations((prev) => prev.filter((s) => s._id !== id && s.id !== id));
       alert("Station deleted successfully!");
     } catch (err) {
       console.error("Error deleting station:", err);
@@ -310,14 +293,13 @@ const handleVerifyBooking = async (booking) => {
     }
 
     try {
-      await updateDoc(doc(db, "stations", stationId), {
-        name: newName,
-        location: newLocation,
-      });
+      await updateStation(stationId, { name: newName, location: newLocation });
 
       setStations((prev) =>
         prev.map((s) =>
-          s.id === stationId ? { ...s, name: newName, location: newLocation } : s
+          (s._id === stationId || s.id === stationId)
+            ? { ...s, name: newName, location: newLocation }
+            : s
         )
       );
 
@@ -460,14 +442,14 @@ const handleVerifyBooking = async (booking) => {
                       </tr>
                     )}
                     {users.map((u) => (
-                      <tr key={u.id}>
-                        <td>{u.id}</td>
+                      <tr key={u.uid}>
+                        <td>{u.uid}</td>
                         <td>{u.displayName || u.name || "N/A"}</td>
                         <td>{u.email || "N/A"}</td>
                         <td>
                           <button
                             className="delete-btn"
-                            onClick={() => handleDeleteUser(u.id)}
+                            onClick={() => handleDeleteUser(u.uid)}
                           >
                             Delete
                           </button>
@@ -541,9 +523,10 @@ const handleVerifyBooking = async (booking) => {
                   <li>No stations found.</li>
                 )}
                 {stations.map((s) => {
-                  const isEditing = editingStationId === s.id;
+                  const stationId = s._id || s.id;
+                  const isEditing = editingStationId === stationId;
                   return (
-                    <li key={s.id} className="station-row">
+                    <li key={stationId} className="station-row">
                       {isEditing ? (
                         <>
                           <div className="station-info">
@@ -564,7 +547,7 @@ const handleVerifyBooking = async (booking) => {
                           <div className="station-actions">
                             <button
                               className="edit-station-btn"
-                              onClick={() => handleSaveEditStation(s.id)}
+                              onClick={() => handleSaveEditStation(stationId)}
                             >
                               Save
                             </button>
@@ -596,7 +579,7 @@ const handleVerifyBooking = async (booking) => {
                             </button>
                             <button
                               className="delete-station-btn"
-                              onClick={() => handleDeleteStation(s.id)}
+                              onClick={() => handleDeleteStation(stationId)}
                             >
                               Delete
                             </button>

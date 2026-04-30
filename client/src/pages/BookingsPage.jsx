@@ -1,7 +1,6 @@
 // src/pages/BookingsPage.jsx
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "../firebase/firebase";
+import { getBookingsByUser } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 
 function formatDate(value) {
@@ -18,13 +17,7 @@ export default function BookingsPage() {
   const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [source, setSource] = useState("firestore"); // or "local"
   const [error, setError] = useState("");
-
-  useEffect(() => {
-  localStorage.removeItem("zapgoBookings"); // Clear local bookings on user change
-}, [user?.uid]);
-
 
   useEffect(() => {
     async function loadBookings() {
@@ -38,47 +31,12 @@ export default function BookingsPage() {
       setError("");
 
       try {
-        // 1) Try Firestore
-        const q = query(
-          collection(db, "bookings"),
-          where("uid", "==", user.uid)
-        );
-
-        const snap = await getDocs(q);
-        const fsBookings = snap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        // sort by createdAt desc (in JS, avoid composite index)
-        fsBookings.sort((a, b) => {
-          const da = new Date(a.createdAt || 0).getTime();
-          const dbb = new Date(b.createdAt || 0).getTime();
-          return dbb - da;
-        });
-
-        if (fsBookings.length > 0) {
-          setBookings(fsBookings);
-          setSource("firestore");
-          setLoading(false);
-          return;
-        }
-
-        // 2) Fallback to localStorage if Firestore empty
-        const local = JSON.parse(
-          localStorage.getItem("zapgoBookings") || "[]"
-        );
-        setBookings(local);
-        setSource("local");
-        setLoading(false);
+        const res = await getBookingsByUser(user.uid);
+        setBookings(res.data || []);
       } catch (err) {
         console.error("Failed to load bookings:", err);
         setError("Could not load bookings from server.");
-        const local = JSON.parse(
-          localStorage.getItem("zapgoBookings") || "[]"
-        );
-        setBookings(local);
-        setSource("local");
+      } finally {
         setLoading(false);
       }
     }
@@ -102,11 +60,8 @@ export default function BookingsPage() {
       <div className="bookings-header">
         <h1>Your Bookings</h1>
         {loading && <span className="badge badge-muted">Loading...</span>}
-        {!loading && source === "firestore" && (
+        {!loading && !error && (
           <span className="badge badge-success">Synced</span>
-        )}
-        {!loading && source === "local" && (
-          <span className="badge badge-warning">Local only</span>
         )}
       </div>
 
