@@ -1,0 +1,405 @@
+/* ================== GLOBAL (safe) ================== */
+
+/* If you want this global, it's fine – box-sizing reset won't hurt */
+* {
+  box-sizing: border-box;
+}
+
+/* ================== ADMIN-ONLY STYLES ================== */
+
+.admin-dashboard-root {
+  margin: 0;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: radial-gradient(circle at top, #111827 0, #020617 40%, #000 100%);
+  color: #e5e7eb;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* NAVBAR */
+.admin-dashboard-root .navbar {
+  height: 64px;
+  background: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Admin heading */
+.admin-dashboard-root .title,
+.admin-dashboard-root .admin-title {
+  margin: 0;
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #f9fafb;   /* plain white */
+  background: none; /* no gradient */
+}
+
+.admin-dashboard-root .logout-btn {
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  border: 1px solid #f97373;
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-dashboard-root .logout-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(239, 68, 68, 0.35);
+}
+
+/* LAYOUT */
+.admin-dashboard-root .container {
+  display: flex;
+  height: calc(100vh - 64px);
+}
+
+/* SIDEBAR */
+.admin-dashboard-root .sidebar {
+  width: 260px;
+  background: linear-gradient(180deg, #020617, #020617 30%, #0b1220 100%);
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
+  padding-top: 1rem;
+}
+
+.admin-dashboard-root .sidebar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem;
+}
+
+.admin-dashboard-root .sidebar ul li {
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.35rem;
+  border-radius: 10px;
+  color: #9ca3af;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.18s ease;
+}
+
+.admin-dashboard-root .sidebar ul li::before {
+  content: "•";
+  font-size: 0.8rem;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: all 0.18s ease;
+}
+
+.admin-dashboard-root .sidebar ul li.active,
+.admin-dashboard-root .sidebar ul li:hover {
+  background: linear-gradient(135deg, #1d4ed8 0, #22c55e 100%);
+  color: #f9fafb;
+}
+
+.admin-dashboard-root .sidebar ul li.active::before,
+.admin-dashboard-root .sidebar ul li:hover::before {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* MAIN CONTENT */
+.admin-dashboard-root .content {
+  flex: 1;
+  padding: 1.5rem 2rem;
+  overflow-y: auto;
+}
+
+/* TAB PANES */
+.admin-dashboard-root .tab-content {
+  display: none;
+}
+
+.admin-dashboard-root .tab-content.active {
+  display: block;
+}
+
+.admin-dashboard-root .tab-content h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #f9fafb;
+}
+
+/* CARDS / PANELS */
+.admin-dashboard-root #viewUsers,
+.admin-dashboard-root #manageStations,
+.admin-dashboard-root #viewStats {
+  background: radial-gradient(circle at top left, #1e293b 0, #020617 60%);
+  border-radius: 18px;
+  padding: 1.5rem;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+/* ========== TABLES (SCOPED) ========== */
+
+.admin-dashboard-root table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.admin-dashboard-root thead {
+  background: rgba(15, 23, 42, 0.85);
+}
+
+.admin-dashboard-root th,
+.admin-dashboard-root td {
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+}
+
+.admin-dashboard-root th {
+  font-weight: 600;
+  color: #e5e7eb;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+.admin-dashboard-root tbody tr:nth-child(even) {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.admin-dashboard-root tbody tr:nth-child(odd) {
+  background: rgba(15, 23, 42, 0.3);
+}
+
+.admin-dashboard-root tbody tr:hover {
+  background: rgba(59, 130, 246, 0.25);
+}
+
+/* ========== FORMS (SCOPED) ========== */
+
+.admin-dashboard-root form {
+  margin-top: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.admin-dashboard-root form input,
+.admin-dashboard-root form textarea,
+.admin-dashboard-root form select {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: rgba(15, 23, 42, 0.9);
+  color: #e5e7eb;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.admin-dashboard-root form input::placeholder,
+.admin-dashboard-root form textarea::placeholder {
+  color: #6b7280;
+}
+
+.admin-dashboard-root form input:focus,
+.admin-dashboard-root form textarea:focus,
+.admin-dashboard-root form select:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.4);
+  background: rgba(15, 23, 42, 1);
+}
+
+.admin-dashboard-root form button {
+  margin-top: 0.2rem;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.6rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-dashboard-root form button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 25px rgba(34, 197, 94, 0.4);
+}
+
+/* STATIONS LIST (SCOPED) */
+
+.admin-dashboard-root #stationsList {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 1rem;
+}
+
+.admin-dashboard-root .station-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.6rem;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.9);
+}
+
+.admin-dashboard-root .station-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-dashboard-root .station-name {
+  font-weight: 600;
+  color: #f9fafb;
+}
+
+.admin-dashboard-root .station-location {
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+.admin-dashboard-root .station-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.admin-dashboard-root .station-row input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  background: rgba(15, 23, 42, 0.95);
+  color: #e5e7eb;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.admin-dashboard-root .station-row input[type="text"]:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.4);
+}
+
+.admin-dashboard-root .station-row button {
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.admin-dashboard-root .station-row button:first-of-type {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #f9fafb;
+  box-shadow: 0 10px 25px rgba(34, 197, 94, 0.35);
+}
+
+.admin-dashboard-root .station-row button:first-of-type:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(34, 197, 94, 0.5);
+}
+
+.admin-dashboard-root .station-row button:last-of-type {
+  background: linear-gradient(135deg, #f97373, #f43f5e);
+  color: #fef2f2;
+  box-shadow: 0 10px 25px rgba(248, 113, 113, 0.35);
+}
+
+.admin-dashboard-root .station-row button:last-of-type:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(248, 113, 113, 0.5);
+}
+
+/* Secondary button: User Login (AdminLogin page) */
+
+.user-login-btn {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.8);
+  color: #e5e7eb;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.user-login-btn:hover {
+  background: rgba(30, 41, 59, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.6);
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .admin-dashboard-root .container {
+    flex-direction: column;
+  }
+
+  .admin-dashboard-root .sidebar {
+    width: 100%;
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .admin-dashboard-root .sidebar ul {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .admin-dashboard-root .sidebar ul li {
+    white-space: nowrap;
+  }
+}
+
+/* DELETE BUTTON (global admin style) */
+.delete-btn {
+  background: linear-gradient(135deg, #f97373, #f43f5e);
+  border: none;
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 10px 22px rgba(239, 68, 68, 0.35);
+}
+
+.delete-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(239, 68, 68, 0.55);
+}
+
+.verify-btn {
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  background: linear-gradient(135deg,#10b981,#059669);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.verify-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(6,95,70,0.25); }
+

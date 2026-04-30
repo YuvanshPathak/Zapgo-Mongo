@@ -1,0 +1,227 @@
+/* admin-login.css - cleaned / no outer white box / particles behind card */
+
+/* ---------------------------
+   Variables
+   --------------------------- */
+:root{
+  --bg-start: #0b1220;
+  --bg-mid:  #071025;
+  --bg-end:  #00020a;
+  --card-bg-a: rgba(14,20,30,0.95);
+  --card-bg-b: rgba(6,12,20,0.9);
+  --muted: #9ca3af;
+  --accent-green-1: #22c55e;
+  --accent-green-2: #16a34a;
+  --glass-border: rgba(148,163,184,0.25);
+}
+
+/* RESET-ish */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Root / page */
+.admin-login-root {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: #e5e7eb;
+
+  /* background gradient (particles live above this) */
+  background: radial-gradient(circle at top, #111827 0%, #020617 45%, #000 100%);
+  position: relative;    /* required so full-screen particle canvas z-index sits behind */
+  overflow: hidden;
+}
+
+/* Make sure any inherited box-shadow / bg is neutral */
+.admin-login-root,
+.login-container {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Container centers the card (no background) */
+ .admin-login-root .login-container {
+   width: 100%;
+   max-width: 420px;
+   padding: 1rem;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+  /* remove pointer-events:none for admin — child elements should handle pointer events */
+}
+
+/* The visible login card */
+.login-card {
+  pointer-events: auto;
+  width: 100%;
+  border-radius: 18px;
+  padding: 2.1rem 2rem;
+  border: 1px solid var(--glass-border);
+  background: linear-gradient(180deg, rgba(12,18,28,0.98) 0%, rgba(9,14,22,0.92) 100%);
+  color: #f9fafb;
+  position: relative;
+  z-index: 3; /* above particles */
+
+  /* Replace the previous harsh white "outer box" with soft inner shadow */
+  box-shadow:
+    0 30px 60px rgba(87, 127, 188, 0.65),      /* deep ambient shadow */
+    inset 0 20px 30px rgba(6,12,22,0.65),/* subtle inner depth */
+    0 8px 18px rgba(0,0,0,0.4);
+}
+
+/* Decorative subtle glow - keep it small and dark (no white plate) */
+.login-card::before {
+  content: "";
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  right: -40px;
+  top: -50px;
+  background: radial-gradient(circle at 30% 30%, rgba(36,73,241,0.14), transparent 55%);
+  pointer-events: none;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+/* Header */
+.login-card h2 {
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  color: #f8fafc;
+}
+
+.login-card::after {
+  content: "Admin Portal";
+  display: block;
+  text-align: center;
+  font-size: 0.86rem;
+  color: var(--muted);
+  margin-bottom: 1.25rem;
+}
+
+/* Form */
+form { width: 100%; display: block; }
+
+.input-group { margin-bottom: 1rem; }
+
+.input-group label {
+  display: block;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 0.36rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* Inputs */
+.input-group input {
+  width: 100%;
+  padding: 0.68rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148,163,184,0.25);
+  background: linear-gradient(180deg, rgba(10,16,26,0.85), rgba(7,12,20,0.88));
+  color: #e7eef6;
+  font-size: 0.95rem;
+  outline: none;
+  transition: box-shadow 0.16s ease, border-color 0.12s ease, transform 0.12s ease;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.input-group input::placeholder { color: rgba(107,114,128,0.7); }
+
+.input-group input:focus {
+  border-color: rgba(34,197,94,0.85);
+  box-shadow: 0 6px 26px rgba(34,197,94,0.08);
+  transform: translateY(-1px);
+  background: rgba(7,12,20,0.98);
+}
+
+/* Error box */
+.error-message {
+  font-size: 0.86rem;
+  color: #f97373;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+/* Primary login button */
+#loginButton {
+  width: 100%;
+  padding: 0.72rem 0.9rem;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.98rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent-green-1), var(--accent-green-2));
+  color: #fbfdfb;
+  box-shadow: 0 10px 30px rgba(34,197,94,0.28), 0 2px 4px rgba(0,0,0,0.35);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+#loginButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgba(34,197,94,0.32);
+}
+
+/* Secondary user-login button (outline/dark) */
+.user-login-btn {
+  width: 100%;
+  margin-top: 0.7rem;
+  padding: 0.68rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,0.14);
+  background: linear-gradient(180deg, rgba(8,12,18,0.6), rgba(5,9,14,0.6));
+  color: #e6eef6;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.user-login-btn:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, rgba(10,15,24,0.8), rgba(6,10,16,0.8));
+}
+
+/* tiny footer label below buttons */
+.login-card .login-footer {
+  margin-top: 0.55rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+/* Accessibility hint: ensure interactive elements sit above particles */
+.login-card,
+.login-container,
+.input-group input,
+#loginButton,
+.user-login-btn {
+  position: relative;
+  z-index: 3;
+}
+
+/* Particles container (if you mount a full-screen canvas) */
+/* The Particles component should be placed earlier in DOM and set to z-index: 0 */
+#tsparticles,
+.particles-canvas {
+  position: absolute !important;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Mobile tweaks */
+@media (max-width: 480px) {
+  .login-card { padding: 1.6rem 1.2rem; border-radius: 14px; }
+  .login-container { padding: .6rem; }
+  .login-card h2 { font-size: 1.3rem; }
+}
