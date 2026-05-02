@@ -17,7 +17,7 @@ Now migrated from a pure Firebase architecture to a robust **Node.js + Express +
   - **Admins**: Dedicated administrative portal with shared-secret verification.
 - **🛠️ Station Management**: Full CRUD operations for EV charging stations.
 - **📊 Real-time Analytics**: Admin dashboard with booking trends and usage statistics powered by MongoDB aggregation pipelines and Chart.js.
-- **⛓️ Immutable Ledger**: Critical booking data is mirrored to a blockchain-inspired ledger on Firestore for verification.
+- **⛓️ Immutable Ledger**: Critical booking data is mirrored to a blockchain-inspired, tamper-evident ledger on MongoDB for verification.
 
 ---
 

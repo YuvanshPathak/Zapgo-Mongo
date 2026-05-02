@@ -119,3 +119,27 @@ export async function updateStation(id, payload) {
 export async function deleteStation(id) {
   return adminFetch(`/stations/${id}`, { method: "DELETE" });
 }
+
+// ── Ledger ───────────────────────────────────────────────────────────────────
+
+/**
+ * Append a new block to the ledger chain.
+ * Server handles prevHash lookup and hash computation.
+ * @param {{ uid, from, to, distance, duration }} payload
+ */
+export async function addLedgerBlock(payload) {
+  return authFetch("/ledger", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+/** Admin: fetch all blocks sorted by index ascending */
+export async function getAllLedgerBlocks() {
+  return adminFetch("/ledger");
+}
+
+/** Admin: ask the server to verify chain integrity */
+export async function verifyLedgerChain() {
+  return adminFetch("/ledger/verify");
+}

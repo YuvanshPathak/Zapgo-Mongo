@@ -4,11 +4,9 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
-import { db } from "../firebase/firebase";
 import { useAuth } from "../context/AuthContext";
-import { createBlock, getLastBlock } from "../utils/ledger.js";
 import { narrateRoute } from "../utils/geminiNarrator.js";
-import { createBooking, getBookingsByUser } from "../utils/api";
+import { createBooking, getBookingsByUser, addLedgerBlock } from "../utils/api";
 import Toast, { useToast } from "../components/Toast";
 
 const defaultMarkerIcon = L.icon({
@@ -327,27 +325,19 @@ export default function MapPage() {
       return;
     }
 
-    // ---- BLOCKCHAIN ----
-    const prevBlock = await getLastBlock(db);
-
-    const block = createBlock(prevBlock, {
-      uid: user?.uid || "",
-      from: start.trim(),
-      to: end.trim(),
-      distance: String(totalDist.toFixed(1)),
-      durationHours: String(Number(totalTimeHrs).toFixed(1)),
-      initialCharge: initChargeNum,
-      finalCharge: finalChargeNum,
-      rangeKm: rangeNum,
-    });
-
-    Object.keys(block).forEach((k) => {
-      if (block[k] === undefined) block[k] = "";
-    });
-
-    const { addDoc, collection } = await import("firebase/firestore");
-    await addDoc(collection(db, "ledger"), block);
-    // ---- END BLOCKCHAIN ----
+    // ---- LEDGER (MongoDB) ----
+    try {
+      await addLedgerBlock({
+        uid:      user?.uid  || '',
+        from:     start.trim(),
+        to:       end.trim(),
+        distance: String(totalDist.toFixed(1)),
+        duration: String(Number(totalTimeHrs).toFixed(1)),
+      });
+    } catch (ledgerErr) {
+      console.warn('Ledger write failed (non-critical):', ledgerErr.message);
+    }
+    // ---- END LEDGER ----
 
     // Save booking to MongoDB
     try {

@@ -1,20 +1,9 @@
 // src/pages/AdminDashboard.jsx
 // near other imports
 // in src/pages/AdminDashboard.jsx
-import {
-  computeHashForBlock,
-  createBlock,
-  verifyChain,
-  getLastBlock,        // <-- if you need the whole block
-  getLastBlockHash,    // <-- if you only need the last hash
-} from "../utils/ledger.js";
+import { computeHashForBlock, verifyChain } from "../utils/ledger.js";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  collection,
-  getDocs,
-} from "firebase/firestore";
-import { db } from "../firebase/firebase";
 import {
   getAllUsers,
   deleteUser,
@@ -23,6 +12,7 @@ import {
   createStation,
   updateStation,
   deleteStation,
+  getAllLedgerBlocks,
 } from "../utils/api";
 import Toast, { useToast } from "../components/Toast";
 import "../admin.css";
@@ -170,36 +160,31 @@ export default function AdminDashboard() {
 
   // --- Handlers ---
 
-  // basic verification handler — put below other handlers
 const handleVerifyBooking = async (booking) => {
   try {
-    // 1) load ledger
-    const snap = await getDocs(collection(db, "ledger"));
-    const chain = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    // 1) Fetch all blocks from MongoDB via API (already sorted by index asc)
+    const res = await getAllLedgerBlocks();
+    const chain = res.data || [];
 
     if (chain.length === 0) {
       showToast("No ledger blocks found.", "error");
       return;
     }
 
-    // 2) sort by index asc (safety in case server ordering differs)
-    chain.sort((a,b) => (Number(a.index)||0) - (Number(b.index)||0));
-
-    // 3) verify entire chain
+    // 2) Client-side chain verification — independent of server trust
     if (!verifyChain(chain)) {
       showToast("Chain invalid — ledger integrity failed.", "error");
       return;
     }
 
-    // 4) find matching block for this booking
+    // 3) Find the block matching this booking
     const match = chain.find(b => {
-      const sameUid = String(b.uid || "") === String(booking.uid || booking.userUid || "");
-      const sameFrom = String((b.from || b.start || "")).trim() === String((booking.from || booking.start || "")).trim();
-      const sameTo = String((b.to || b.destination || "")).trim() === String((booking.to || booking.destination || "")).trim();
-      const sameDist = (b.distance || b.dist || "") == (booking.distance || booking.dist || "");
-      const sameTime = (b.duration || b.durationHours || b.time || "") == (booking.durationHours || booking.time || "");
-      const sameCreated = String(b.createdAt || "") === String(booking.createdAt || "");
-      return sameUid && sameFrom && sameTo && (sameDist || sameTime || sameCreated);
+      const sameUid  = String(b.uid  || '') === String(booking.uid || '');
+      const sameFrom = String(b.from || '').trim() === String(booking.start || booking.from || '').trim();
+      const sameTo   = String(b.to   || '').trim() === String(booking.destination || booking.to || '').trim();
+      const sameDist = (b.distance || '') == (booking.distance || booking.dist || '');
+      const sameTime = (b.duration || '') == (booking.durationHours || booking.time || '');
+      return sameUid && sameFrom && sameTo && (sameDist || sameTime);
     });
 
     if (!match) {
@@ -207,18 +192,17 @@ const handleVerifyBooking = async (booking) => {
       return;
     }
 
-    // 5) recompute hash and compare
+    // 4) Recompute hash client-side and compare stored hash
     const computed = computeHashForBlock(match);
-    if (computed === (match.hash || match._hash || "")) {
+    if (computed === match.hash) {
       showToast("✓ Booking verified — chain valid.", "success");
     } else {
       showToast("Verification failed: hash mismatch.", "error");
-      console.error("Stored block:", match);
-      console.error("Computed hash:", computed);
+      console.error('Stored:', match.hash, 'Computed:', computed);
     }
   } catch (err) {
-    console.error("Verify failed:", err);
-    alert("Verification failed — check console.");
+    console.error('Verify failed:', err);
+    showToast("Verification failed — check console.", "error");
   }
 };
 

@@ -3,9 +3,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 
-const userRoutes = require('./routes/user.routes');
+const userRoutes    = require('./routes/user.routes');
 const bookingRoutes = require('./routes/booking.routes');
 const stationRoutes = require('./routes/station.routes');
+const ledgerRoutes  = require('./routes/ledger.routes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -31,9 +32,10 @@ app.get('/ping', (req, res) => {
 });
 
 // ── API Routes ────────────────────────────────────────────────────────────────
-app.use('/api/users', userRoutes);
+app.use('/api/users',    userRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/stations', stationRoutes);
+app.use('/api/ledger',   ledgerRoutes);
 
 // ── MongoDB Connection ────────────────────────────────────────────────────────
 mongoose
